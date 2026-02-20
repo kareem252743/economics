@@ -14,12 +14,13 @@
     --midColor:#3a7bd5;
     --finalColor:#2c5364;
     --darkBar:#1b1b1b;
+    --activeMid:#3498db;
+    --activeFinal:#1f3d5a;
 }
 body{
     background:var(--bodyBg);
     color:#fff;
     font-family:'Cairo', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    user-select:none;
     margin:0;
 }
 nav{background:rgba(0,0,0,0.6);padding:15px 30px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0; z-index:1000;box-shadow:0 2px 10px rgba(0,0,0,0.3);}
@@ -43,22 +44,40 @@ nav ul li a:hover{color:var(--accent);}
     font-weight:bold; transition:0.3s; box-shadow:0 4px 10px rgba(0,0,0,0.3);
 }
 .card a:hover{background:#3a3bd5; color:#fff; transform:translateY(-2px);}
-.actions{display:flex; gap:20px; justify-content:center; margin-top:40px;}
-.actions button{padding:15px 30px; border:none; border-radius:12px; font-size:18px; font-weight:bold; cursor:pointer; color:#fff; box-shadow:0 4px 10px rgba(0,0,0,0.3); transition:0.3s;}
-.actions .midterm{background:var(--midColor);}
-.actions .final{background:var(--finalColor);}
-.actions button:hover{opacity:0.85; transform:translateY(-2px);}
-.pdf-section{margin-top:30px; display:none; flex-direction:column; gap:15px; transition:all 0.5s ease;}
-.material-box{background:var(--darkBar);color:#fff;padding:18px;border-radius:8px; cursor:pointer; font-weight:bold; margin-bottom:8px; transition:0.3s;}
-.material-box:hover{background:#333;}
-.back-btn{background:#fff; color:#000; padding:10px 20px; border:none; border-radius:10px; cursor:pointer; margin-bottom:12px; font-weight:bold; transition:0.3s;}
-.back-btn:hover{opacity:0.85; transform:translateY(-2px);}
-
-/* تصميم قائمة المحاضرات */
+.pdf-options{display:flex; justify-content:center; gap:30px; flex-wrap:wrap; margin-bottom:30px;}
+.pdf-card{
+    background:var(--darkBar);
+    padding:30px;
+    border-radius:15px;
+    width:220px;
+    text-align:center;
+    cursor:pointer;
+    transition:0.3s;
+    box-shadow:0 6px 15px rgba(0,0,0,0.4);
+    font-weight:bold;
+    font-size:18px;
+}
+.pdf-card:hover{ background:#333; transform:translateY(-4px); }
+.pdf-card.active{ background:var(--accent); }
+.material-list{
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+    margin-bottom:20px;
+}
+.material-item{
+    background:#2c2c2c;
+    padding:14px 20px;
+    border-radius:10px;
+    cursor:pointer;
+    transition:0.3s;
+    font-weight:bold;
+}
+.material-item:hover{background:#3a3a3a;}
 .chapter-list{
     list-style:none;
     padding-left:0;
-    margin:10px 0 20px 0;
+    margin-top:10px;
 }
 .chapter-list li{
     background:#2c2c2c;
@@ -69,11 +88,6 @@ nav ul li a:hover{color:var(--accent);}
     display:flex;
     justify-content:space-between;
     align-items:center;
-    cursor:pointer;
-    transition:0.3s;
-}
-.chapter-list li:hover{
-    background:#3a3a3a;
 }
 .chapter-actions a{
     padding:6px 12px;
@@ -86,7 +100,10 @@ nav ul li a:hover{color:var(--accent);}
 .chapter-actions .view-btn{background:var(--midColor);}
 .chapter-actions .download-btn{background:var(--finalColor);}
 .chapter-actions a:hover{opacity:0.85;}
-
+.back-btn{
+    background:#fff; color:#000; padding:10px 20px; border:none; border-radius:10px; cursor:pointer; font-weight:bold; margin-bottom:12px; transition:0.3s;
+}
+.back-btn:hover{opacity:0.85; transform:translateY(-2px);}
 .footer{text-align:center;padding:25px;background:rgba(0,0,0,0.6);margin-top:40px; font-size:16px;}
 </style>
 </head>
@@ -94,7 +111,7 @@ nav ul li a:hover{color:var(--accent);}
 
 <nav>
 <h2>كلية إدارة الأعمال</h2>
-<ul><li><a href="#courses">المقررات</a></li></ul>
+<ul><li><a href="#pdfSection">ملفات PDF</a></li></ul>
 </nav>
 
 <section class="hero">
@@ -113,12 +130,17 @@ nav ul li a:hover{color:var(--accent);}
 <div class="card"><i class="fas fa-language" style="color:#ec7063"></i><h3>اللغة الإنجليزية</h3><a href="https://youtube.com/playlist?list=PLemO7VqziXJbqKkN2Dz31nWN6bfq6XJWW" target="_blank">عرض المحاضرات</a></div>
 </div>
 
-<div class="actions">
-<button class="midterm" onclick="showChapters('mid')">ميد ترم</button>
-<button class="final" onclick="showChapters('final')">فاينل</button>
+<h2 class="section-title" id="pdfSection">ملفات PDF الخاصة بالكلية</h2>
+
+<!-- بطاقات PDF -->
+<div class="pdf-options">
+    <div class="pdf-card" id="midCard" onclick="showMaterials('mid')">PDF الميد ترم</div>
+    <div class="pdf-card" id="finalCard" onclick="showMaterials('final')">PDF الفاينل</div>
 </div>
 
-<div class="pdf-section" id="pdfDisplay"></div>
+<!-- الحاوية لعرض المواد أو المحاضرات -->
+<div id="pdfDisplay"></div>
+
 </div>
 
 <div class="footer">© 2026 جميع الحقوق محفوظة | كريم السيد</div>
@@ -142,61 +164,69 @@ const materials = {
     'english':'اللغة الإنجليزية'
 };
 
-let currentType='', showingMaterial=null;
+let currentType = '';
 
-function showChapters(type){
-    currentType = type;
-    showingMaterial = null;
-    const pdfSection = document.getElementById('pdfDisplay');
-    pdfSection.style.display='flex';
-    pdfSection.innerHTML='<h2 class="section-title">'+(type==='mid'?'ميد ترم':'فاينل')+'</h2>';
-    let html='';
-    for(const key in materials){
-        html+='<div class="material-box" onclick="toggleMaterial(\''+key+'\')">'+materials[key]+'</div>';
-    }
-    pdfSection.innerHTML+=html;
+function activateCard(type){
+    document.getElementById('midCard').classList.remove('active');
+    document.getElementById('finalCard').classList.remove('active');
+    if(type==='mid') document.getElementById('midCard').classList.add('active');
+    if(type==='final') document.getElementById('finalCard').classList.add('active');
 }
 
 async function fileExists(url){
     try{
         const response = await fetch(url,{method:'HEAD'});
         return response.ok;
-    }catch(e){
-        return false;
+    }catch(e){ return false; }
+}
+
+// عرض المواد أولًا
+function showMaterials(type){
+    currentType = type;
+    activateCard(type);
+    const pdfDisplay = document.getElementById('pdfDisplay');
+    pdfDisplay.innerHTML='';
+
+    for(const key in materials){
+        const div = document.createElement('div');
+        div.className='material-item';
+        div.textContent = materials[key];
+        div.onclick = ()=> showChapters(key);
+        pdfDisplay.appendChild(div);
     }
 }
 
-async function toggleMaterial(material){
-    const pdfSection = document.getElementById('pdfDisplay');
-    if(showingMaterial === material){
-        showChapters(currentType);
-        return;
-    }
-    showingMaterial = material;
-
-    pdfSection.innerHTML='<h2 class="section-title">'+(currentType==='mid'?'ميد ترم':'فاينل')+'</h2>';
+// عرض المحاضرات عند اختيار مادة
+async function showChapters(materialKey){
+    const pdfDisplay = document.getElementById('pdfDisplay');
+    pdfDisplay.innerHTML='';
 
     const backBtn = document.createElement('button');
     backBtn.className='back-btn';
     backBtn.textContent='عودة إلى المواد';
-    backBtn.onclick = () => showChapters(currentType);
-    pdfSection.appendChild(backBtn);
+    backBtn.onclick = ()=> showMaterials(currentType);
+    pdfDisplay.appendChild(backBtn);
 
-    const chapterList = document.createElement('ul');
-    chapterList.className='chapter-list';
-    for(let i=1;i<=20;i++){  // عدد المحاضرات 20
+    const h3 = document.createElement('h3');
+    h3.textContent = materials[materialKey];
+    h3.style.marginBottom='8px';
+    pdfDisplay.appendChild(h3);
+
+    const ul = document.createElement('ul');
+    ul.className='chapter-list';
+    for(let i=1;i<=20;i++){
         const li = document.createElement('li');
-        const pdfUrl = material+'-'+currentType+'-pdf'+i+'.pdf';
+        const pdfUrl = `${materialKey}-${currentType}-pdf${i}.pdf`;
         const exists = await fileExists(pdfUrl);
         li.innerHTML = 'محاضرة '+i+
-        '<span class="chapter-actions">'+
-        (exists?'<a href="'+pdfUrl+'" target="_blank" class="view-btn">عرض PDF</a>'+
-                '<a href="'+pdfUrl+'" download class="download-btn">تحميل PDF</a>'
-        :'<span style="opacity:0.6;">لم يتم رفع الملف بعد</span>')+
-        '</span>';
-        chapterList.appendChild(li);
+            '<span class="chapter-actions">'+
+            (exists?`<a href="${pdfUrl}" target="_blank" class="view-btn">عرض PDF</a>
+                    <a href="${pdfUrl}" download class="download-btn">تحميل PDF</a>`:
+                    '<span style="opacity:0.6;">لم يتم رفع الملف بعد</span>')+
+            '</span>';
+        ul.appendChild(li);
     }
-    pdfSection.appendChild(chapterList);
+    pdfDisplay.appendChild(ul);
 }
 </script>
 
