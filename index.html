@@ -105,6 +105,12 @@ nav ul li a:hover{color:var(--accent);}
 }
 .back-btn:hover{opacity:0.85; transform:translateY(-2px);}
 .footer{text-align:center;padding:25px;background:rgba(0,0,0,0.6);margin-top:40px; font-size:16px;}
+.visitor-counter{
+    margin-top:10px;
+    font-size:18px;
+    color:#4facfe;
+    font-weight:bold;
+}
 </style>
 </head>
 <body>
@@ -131,21 +137,31 @@ nav ul li a:hover{color:var(--accent);}
 </div>
 
 <h2 class="section-title" id="pdfSection">ملفات PDF الخاصة بالكلية</h2>
-
-<!-- بطاقات PDF -->
 <div class="pdf-options">
     <div class="pdf-card" id="midCard" onclick="showMaterials('mid')">PDF الميد ترم</div>
     <div class="pdf-card" id="finalCard" onclick="showMaterials('final')">PDF الفاينل</div>
 </div>
 
-<!-- الحاوية لعرض المواد أو المحاضرات -->
 <div id="pdfDisplay"></div>
-
 </div>
 
-<div class="footer">© 2026 جميع الحقوق محفوظة | كريم السيد</div>
+<div class="footer">
+© 2026 جميع الحقوق محفوظة | كريم السيد
+<div class="visitor-counter">
+عدد الزوار: <span id="visitorCount">0</span>
+</div>
+</div>
 
 <script>
+// عداد الزوار
+if(!localStorage.getItem("visited")){
+    let count = localStorage.getItem("visitorCount") || 0;
+    count++;
+    localStorage.setItem("visitorCount", count);
+    localStorage.setItem("visited", "true");
+}
+document.getElementById("visitorCount").textContent = localStorage.getItem("visitorCount") || 1;
+
 document.addEventListener("contextmenu", e=>e.preventDefault());
 document.addEventListener("selectstart", e=>e.preventDefault());
 document.addEventListener("keydown", e=>{
@@ -180,7 +196,6 @@ async function fileExists(url){
     }catch(e){ return false; }
 }
 
-// عرض المواد أولًا
 function showMaterials(type){
     currentType = type;
     activateCard(type);
@@ -196,7 +211,6 @@ function showMaterials(type){
     }
 }
 
-// عرض المحاضرات عند اختيار مادة
 async function showChapters(materialKey){
     const pdfDisplay = document.getElementById('pdfDisplay');
     pdfDisplay.innerHTML='';
